@@ -1,15 +1,9 @@
 import express, { Request, Response } from "express";
+import productRouter from "./routes/products/product.routes";
+import app from "./app";
 
-const app = express();
-
-app.use(express.json());
-
-const PORT = 6767;
-
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Servaer is Running Great", success: true });
-});
+const PORT = process.env.PORT || 6767;
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
