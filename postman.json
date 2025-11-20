@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "Merchant-API's",
+    "description": "A scalable backend service for managing merchants",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "merchant-api-collection"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        },
+        "description": "Check if the server is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/allProducts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "allProducts"]
+            },
+            "description": "Retrieve all products from the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "123",
+                  "description": "Product ID"
+                }
+              ]
+            },
+            "description": "Retrieve a specific product by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Laptop\",\n  \"description\": \"High-performance laptop for professional use\",\n  \"price\": 1299.99,\n  \"category\": \"Electronics\",\n  \"stock\": 50,\n  \"sku\": \"LAP-001\",\n  \"brand\": \"TechBrand\",\n  \"specifications\": {\n    \"processor\": \"Intel i7\",\n    \"ram\": \"16GB\",\n    \"storage\": \"512GB SSD\"\n  },\n  \"images\": [\n    \"https://example.com/images/laptop1.jpg\",\n    \"https://example.com/images/laptop2.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "create"]
+            },
+            "description": "Create a new product in the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Laptop - Updated\",\n  \"description\": \"High-performance laptop with latest features\",\n  \"price\": 1199.99,\n  \"category\": \"Electronics\",\n  \"stock\": 45,\n  \"brand\": \"TechBrand\",\n  \"specifications\": {\n    \"processor\": \"Intel i7 Gen 13\",\n    \"ram\": \"32GB\",\n    \"storage\": \"1TB SSD\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/update/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "update", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "123",
+                  "description": "Product ID to update"
+                }
+              ]
+            },
+            "description": "Update an existing product by its ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/delete/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "delete", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "123",
+                  "description": "Product ID to delete"
+                }
+              ]
+            },
+            "description": "Delete a product by its ID"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:6767",
+      "type": "string"
+    }
+  ]
+}
