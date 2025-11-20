@@ -1,5 +1,4 @@
 import express, { json, Response, Request, urlencoded } from "express";
-
 const app = express();
 app.use(json());
 
