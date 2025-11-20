@@ -11,5 +11,9 @@ app.use("/api/v1/products", productRouter);
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Server is Running Great", success: true });
 });
+// error handler (should be last middleware)
+import errorHandler from "./middlewares/errorHandler";
+
+app.use(errorHandler);
 
 export default app;
