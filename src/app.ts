@@ -1,12 +1,12 @@
-import express, { Response, Request, urlencoded } from "express";
+import express, { json, Response, Request, urlencoded } from "express";
 
 const app = express();
-app.use(express.json());
+app.use(json());
 
 app.use(urlencoded({ extended: true }));
 
 // products routes
-import productRouter from "./routes/products/product.routes";
+import productRouter from "./routes/products/products.routes";
 app.use("/api/v1/products", productRouter);
 
 app.get("/", (req: Request, res: Response) => {
