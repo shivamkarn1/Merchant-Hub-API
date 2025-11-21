@@ -7,6 +7,7 @@ import { ApiError } from "../../utils/ApiError";
 import createProductSchema from "./product.validation";
 import { createProduct } from "../../services/products/products.service";
 import { zodToApiError } from "../../utils/handleZodError";
+import { eq } from "drizzle-orm";
 
 const getAllProductsHandler = asyncHandler(async (req, res) => {
   const products = await db.select().from(productsTable);
@@ -57,9 +58,16 @@ const deleteProductHandler = asyncHandler(async (req, res) => {
 });
 
 const getProductByIdHandler = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const [product] = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.id, Number(id)));
   return res
     .status(Status.OK)
-    .json(new ApiResponse(Status.OK, {}, "Here you go the product by Id"));
+    .json(
+      new ApiResponse(Status.OK, { product }, "Here you go the product by Id")
+    );
 });
 
 export {
