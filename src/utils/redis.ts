@@ -21,6 +21,7 @@ const cache = {
       return null;
     }
   },
+
   async set(key: string, value: any, ttl: number) {
     try {
       await redisClient.setEx(key, ttl, JSON.stringify(value));
