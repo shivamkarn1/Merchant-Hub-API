@@ -180,7 +180,7 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
   // finally success response send
   return res
     .status(OK)
-    .json(new ApiResponse(Status.OK, response, "Products Fetched"));
+    .json(new ApiResponse(Status.OK, response, "Product(s) Fetched"));
 });
 
 const createProductHandler = asyncHandler(async (req, res) => {
