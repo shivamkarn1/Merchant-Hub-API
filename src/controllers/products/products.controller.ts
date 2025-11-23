@@ -6,9 +6,11 @@ import { productsTable } from "../../db/products.schema";
 import Status from "../../utils/HttpStatusCodes";
 import { ApiError } from "../../utils/ApiError";
 import createProductSchema from "./product.validation";
-import { createProduct } from "../../services/products/products.service";
+import productsService, {
+  createProduct,
+} from "../../services/products/products.service";
 import { zodToApiError } from "../../utils/handleZodError";
-import { eq } from "drizzle-orm";
+import { eq, and, like, gte, lte, desc, asc, or } from "drizzle-orm";
 import { cache } from "../../utils/redis";
 import { z } from "zod";
 import crypto from "crypto";
@@ -20,7 +22,12 @@ const CACHE_TTL = {
 
 // query schema ahh query better kara k lagi , Production level things.
 export const getProductQuerySchema = z.object({
+  sku: z.string().optional(),
   q: z.string().optional(),
+  price: z.preprocess(
+    (v) => (v === undefined ? undefined : Number(v)),
+    z.number().nonnegative().optional()
+  ),
   minPrice: z.preprocess(
     (v) => (v === undefined ? undefined : Number(v)),
     z.number().nonnegative().optional()
@@ -59,7 +66,7 @@ export const getProductQuerySchema = z.object({
 // };
 
 type ProductQueryParams = z.infer<typeof getProductQuerySchema>;
-// now cache key banaba prtaiiiii for ofcourse redis
+// now cache key banaba prtaiiiii for ofcourse redissss
 function buildCacheKeyFromQuery(obj: ProductQueryParams) {
   const normalized: Record<string, unknown> = {};
   Object.keys(obj)
@@ -81,7 +88,9 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
     throw zodToApiError(parsedResult.error);
   }
   const {
+    sku,
     q,
+    price,
     minPrice,
     maxPrice,
     inStock,
@@ -91,9 +100,10 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
     offset = 0,
   } = parsedResult.data;
 
-  // check in cache
   const cacheKey = buildCacheKeyFromQuery({
+    sku,
     q,
+    price,
     minPrice,
     maxPrice,
     inStock,
@@ -102,7 +112,7 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
     limit,
     offset,
   });
-
+  // check in cache
   const cached = await cache.get(cacheKey);
   if (cached) {
     return res
@@ -110,7 +120,67 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
       .json(new ApiResponse(Status.OK, cached, "Products served from Cache"));
   }
 
-  // REST CODE REMAINING
+  // Building "where" clause beigns here
+  const where: any[] = [];
+
+  if (sku) {
+    where.push(eq(productsTable.sku, sku));
+  }
+
+  if (typeof price === "number") {
+    where.push(eq(productsTable.price, price.toString()));
+  }
+
+  if (q) {
+    // search in name or desc
+    where.push(
+      or(
+        like(productsTable.name, `%${q}%`),
+        like(productsTable.description, `%${q}%`)
+      )
+    );
+  }
+  if (typeof minPrice === "number")
+    where.push(gte(productsTable.price, minPrice.toString()));
+  if (typeof maxPrice === "number")
+    where.push(lte(productsTable.price, maxPrice.toString()));
+
+  if (inStock !== undefined) {
+    where.push(
+      inStock ? gte(productsTable.stock, 1) : eq(productsTable.stock, 0)
+    );
+  }
+  // Building "where" clause ends here
+
+  // now sorting
+  const sortMap = {
+    price: productsTable.price,
+    name: productsTable.name,
+    created_at: productsTable.created_at,
+  };
+  const sortColumn = sortMap[sortBy] ?? productsTable.created_at;
+  const direction = sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn);
+
+  // Final Query for the db
+  const products = await db
+    .select()
+    .from(productsTable)
+    .where(where.length ? and(...where) : undefined)
+    .orderBy(direction)
+    .limit(limit)
+    .offset(offset);
+
+  // Response and cache
+  const response = {
+    products,
+    meta: { limit, offset, count: products.length },
+  };
+  await cache.set(cacheKey, response, 120); // cache 2min
+
+  // finally success response send
+  return res
+    .status(OK)
+    .json(new ApiResponse(Status.OK, response, "Products Fetched"));
 });
 
 const createProductHandler = asyncHandler(async (req, res) => {
