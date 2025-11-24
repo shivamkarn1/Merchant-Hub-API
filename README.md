@@ -10,6 +10,12 @@ A scalable backend service for managing merchants and products with TypeScript, 
 - ✅ PostgreSQL database with Drizzle ORM
 - ✅ Environment-based configuration
 
+## Current Integrations Status
+
+- **Redis**: Integrated via `src/utils/redis.ts`. Used for caching product queries (keys like `products:query:<hash>`) and single-product entries. TTLs in code: `ALL_PRODUCTS` ≈ 600s, `SINGLE_PRODUCT` ≈ 300s; some queries use shorter TTLs (e.g., 120s). Cache entries are invalidated on create/update/delete operations where implemented.
+
+- **RBAC / ABAC Middleware**: Implemented under `src/middlewares` (`auth.middleware.ts`, `rbac.middleware.ts`, `abac.middleware.ts`). Permissions include `orders.cancel`; ownership checks ensure customers may cancel only their own orders (checked both in middleware and service layer).
+
 ## Tech Stack
 
 - **Runtime**: Node.js with TypeScript
@@ -66,13 +72,8 @@ A scalable backend service for managing merchants and products with TypeScript, 
 
 ## Upcoming Features
 
-- Pagination, search, and filtering for products
 - Orders management module
-- Authentication & authorization (JWT)
-- Redis caching for performance
 - Docker containerization
-- API documentation (Swagger)
-- Unit and integration tests
 
 ## Project Structure
 
