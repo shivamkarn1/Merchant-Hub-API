@@ -31,8 +31,10 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.6",
     "drizzle-kit": "^0.31.7",
+    "jsonwebtoken": "^9.0.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
