@@ -6,8 +6,11 @@ import { productsTable } from "../../db/products.schema";
 import Status from "../../utils/HttpStatusCodes";
 import { ApiError } from "../../utils/ApiError";
 import createProductSchema from "./product.validation";
-import productsService, {
+import {
   createProduct,
+  updateProduct,
+  getProductById,
+  deleteProduct,
 } from "../../services/products/products.service";
 import { zodToApiError } from "../../utils/handleZodError";
 import { eq, and, like, gte, lte, desc, asc, or } from "drizzle-orm";
@@ -185,6 +188,9 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
 
 const createProductHandler = asyncHandler(async (req, res) => {
   // sabsa pahila ta input validation
+  if (!req.user) {
+    throw new ApiError(Status.Unauthorized, "Aunthentication Required");
+  }
   const parseResult = await createProductSchema.safeParseAsync(req.body);
   // check kara prlai ki success velai ki nai parsing
   if (!parseResult.success) {
@@ -193,7 +199,7 @@ const createProductHandler = asyncHandler(async (req, res) => {
 
   console.log("The data to be sent for creation is : ", parseResult.data);
   // okr baad service call kara partai nai
-  const createdProduct = await createProduct(parseResult.data);
+  const createdProduct = await createProduct(parseResult.data, req.user);
 
   // invalidate all products cache after the product has been created
   await cache.del("products:all");
@@ -204,20 +210,20 @@ const createProductHandler = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         Status.Created,
-        { createdProduct },
+        createdProduct,
         "Product Created Successfully"
       )
     );
 });
 
 const updateProductHandler = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  // invalidate related caches
-  await cache.del("products:all");
-  await cache.del(`products:${id}`);
-
-  // validate partial update payload
+  if (!req.user) {
+    throw new ApiError(Status.Unauthorized, "Authentication Required");
+  }
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    throw new ApiError(Status.BadRequest, "Invalid Product ID");
+  }
   const parseResult = await createProductSchema
     .partial()
     .safeParseAsync(req.body);
@@ -225,108 +231,48 @@ const updateProductHandler = asyncHandler(async (req, res) => {
   if (!parseResult.success) {
     throw zodToApiError(parseResult.error);
   }
-  const updateData = parseResult.data;
-
-  // Remove undefined fields because drizzle .set(...) doesn't accept values that may be undefined
-  const updatePayload = Object.fromEntries(
-    Object.entries(updateData).filter(([, v]) => v !== undefined)
-  ) as Record<string, unknown>;
-
-  /*  
-function bana sake xiyai e kaam k lagi but I don't think it's much necessary right now, And I feel lazy for it too, lol.
-  export function removeUndefinedFromObejects < T extends Record<string,any>>(obj: T){
-  return Object.FromEnteries(
-  Object.enteries(obj.filter(([_,v])=> v!== undefined)) as T;
-  )
-  }
-  */
-
-  if (Object.keys(updatePayload).length === 0) {
-    throw new ApiError(Status.BadRequest, "No Field for update");
-  }
-
-  const updatedRows = await db
-    .update(productsTable)
-    .set(updatePayload)
-    .where(eq(productsTable.id, Number(id)))
-    .returning();
-
-  const [updatedProduct] = updatedRows ?? [];
-  if (!updatedProduct) {
-    throw new ApiError(Status.NotFound, "Product not found");
-  }
-
-  // refresh single product cache with updated value
-  await cache.set(`products:${id}`, updatedProduct, CACHE_TTL.SINGLE_PRODUCT);
-
+  const updateData = await updateProduct(id, parseResult.data, req.user);
   return res
     .status(OK)
     .json(
-      new ApiResponse(
-        Status.OK,
-        { updatedProduct },
-        "Product Updated Successfully"
-      )
+      new ApiResponse(Status.OK, { updateData }, "Product Updated Successfully")
     );
 });
 
 const deleteProductHandler = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  // invalidate related caches
-  await cache.del("products:all");
-  await cache.del(`products:${id}`);
-
-  const deletedRows = await db
-    .delete(productsTable)
-    .where(eq(productsTable.id, Number(id)))
-    .returning();
-
-  const [deletedProduct] = deletedRows ?? [];
-  if (!deletedProduct) {
-    throw new ApiError(Status.NotFound, "Product not found");
+  if (!req.user) {
+    throw new ApiError(Status.Unauthorized, "Authentication Required");
   }
+  const id = parseInt(req.params.id);
+
+  if (isNaN(id)) {
+    throw new ApiError(Status.BadRequest, " Invaild product ID");
+  }
+
+  await deleteProduct(id, req.user);
+  return res
+    .status(OK)
+    .json(new ApiResponse(Status.OK, {}, "Product Deleted Successfully"));
+});
+
+const getProductByIdHandler = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(Status.Unauthorized, "Authentication required");
+  }
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    throw new ApiError(Status.BadRequest, "Invalid product ID");
+  }
+  const product = await getProductById(id, req.user);
 
   return res
     .status(OK)
     .json(
       new ApiResponse(
         Status.OK,
-        { deletedProduct },
-        "Product Deleted Successfully"
+        { product },
+        `The product with id : ${id} served`
       )
-    );
-});
-
-const getProductByIdHandler = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const cacheKey = `products:${id}`;
-  // Try to get from cache
-  const productInCache = await cache.get(cacheKey);
-  if (productInCache) {
-    return res
-      .status(OK)
-      .json(
-        new ApiResponse(
-          Status.OK,
-          { product: productInCache },
-          "The required Product served"
-        )
-      );
-  }
-  // if not in cache then fetch from db
-  const [product] = await db
-    .select()
-    .from(productsTable)
-    .where(eq(productsTable.id, Number(id)));
-
-  if (product) {
-    await cache.set(cacheKey, product, CACHE_TTL.SINGLE_PRODUCT);
-  }
-  return res
-    .status(OK)
-    .json(
-      new ApiResponse(Status.OK, { product }, "Here you go the product by Id")
     );
 });
 
