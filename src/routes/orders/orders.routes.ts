@@ -234,7 +234,7 @@ orderRouter.put(
  *       - Customers can ONLY cancel their own orders
  *       - Merchants can cancel orders they manage
  *       - Admins can cancel any order
- *       
+ *
  *       Only orders with status "pending" or "confirmed" can be cancelled.
  *     tags: [Orders]
  *     security:
