@@ -1,24 +1,109 @@
 {
   "info": {
-    "name": "Merchant-API's",
-    "description": "A scalable backend service for managing merchants",
+    "name": "Merchant Hub API",
+    "description": "A production-ready, scalable RESTful API for merchant and e-commerce management.\n\n## Authentication\nMost endpoints require JWT Bearer token authentication. Include the token in the Authorization header.\n\n## User Roles\n- super_admin: Full system access\n- admin: Administrative access\n- merchant: Merchant-level access to own resources\n- customer: Customer-level access to own data\n- viewer: Read-only access",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "merchant-api-collection"
+    "_exporter_id": "merchant-hub-api"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/",
-          "host": ["{{base_url}}"],
-          "path": [""]
+      "name": "Health & Info",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the server is running and healthy. Returns uptime, version, and timestamp."
+          },
+          "response": [
+            {
+              "name": "Healthy Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2025-11-26T10:30:00.000Z\",\n  \"uptime\": 3600,\n  \"version\": \"1.0.0\"\n}"
+            }
+          ]
         },
-        "description": "Check if the server is running"
-      },
-      "response": []
+        {
+          "name": "API Info",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Get API information and available endpoints"
+          },
+          "response": [
+            {
+              "name": "API Info Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/",
+                  "host": ["{{base_url}}"],
+                  "path": [""]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"message\": \"Merchant Hub API\",\n  \"version\": \"1.0.0\",\n  \"documentation\": \"/api-docs\",\n  \"health\": \"/health\",\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "API Documentation (Swagger JSON)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api-docs.json",
+              "host": ["{{base_url}}"],
+              "path": ["api-docs.json"]
+            },
+            "description": "Get OpenAPI specification in JSON format"
+          },
+          "response": []
+        }
+      ],
+      "description": "Health check and API information endpoints"
     },
     {
       "name": "Products",
@@ -26,6 +111,9 @@
         {
           "name": "Get All Products",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -33,7 +121,111 @@
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "products", "allProducts"]
             },
-            "description": "Retrieve all products from the database"
+            "description": "Retrieve all products from the database. No authentication required."
+          },
+          "response": [
+            {
+              "name": "Products List Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/allProducts",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "allProducts"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"products\": [\n      {\n        \"id\": 1,\n        \"sku\": \"PROD-001\",\n        \"name\": \"Sample Product\",\n        \"description\": \"A sample product\",\n        \"price\": \"99.99\",\n        \"stock\": 100,\n        \"merchant_id\": 1,\n        \"created_at\": \"2025-11-26T10:00:00.000Z\",\n        \"updated_at\": \"2025-11-26T10:00:00.000Z\"\n      }\n    ],\n    \"meta\": {\n      \"limit\": 20,\n      \"offset\": 0,\n      \"count\": 1\n    }\n  },\n  \"message\": \"Products fetched successfully\",\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Products (with Filters)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/allProducts?q=laptop&minPrice=100&maxPrice=2000&inStock=true&sortBy=price&sortOrder=asc&limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "allProducts"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "laptop",
+                  "description": "Search query for product name or description"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "100",
+                  "description": "Minimum price filter"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "2000",
+                  "description": "Maximum price filter"
+                },
+                {
+                  "key": "inStock",
+                  "value": "true",
+                  "description": "Filter by stock availability (true/false)"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "price",
+                  "description": "Sort field (price, name, created_at)"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc",
+                  "description": "Sort direction (asc, desc)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of items per page (max: 100)"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Pagination offset"
+                }
+              ]
+            },
+            "description": "Retrieve products with advanced filtering, sorting, and pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/allProducts/search?q=phone&sku=PROD-001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", "allProducts", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "phone",
+                  "description": "Search query"
+                },
+                {
+                  "key": "sku",
+                  "value": "PROD-001",
+                  "description": "Filter by SKU"
+                }
+              ]
+            },
+            "description": "Search products with various filters (alias for allProducts)"
           },
           "response": []
         },
@@ -41,7 +233,13 @@
           "name": "Get Product By ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/products/:id",
               "host": ["{{base_url}}"],
@@ -49,14 +247,45 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "123",
+                  "value": "1",
                   "description": "Product ID"
                 }
               ]
             },
-            "description": "Retrieve a specific product by its ID"
+            "description": "Retrieve a specific product by its ID. Requires authentication."
           },
-          "response": []
+          "response": [
+            {
+              "name": "Product Detail Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"product\": {\n      \"id\": 1,\n      \"sku\": \"PROD-001\",\n      \"name\": \"Sample Product\",\n      \"description\": \"A sample product description\",\n      \"price\": \"99.99\",\n      \"currency\": \"NPR\",\n      \"stock\": 100,\n      \"is_active\": true,\n      \"image_url\": \"https://example.com/image.jpg\",\n      \"merchant_id\": 1,\n      \"created_by\": 1,\n      \"created_at\": \"2025-11-26T10:00:00.000Z\",\n      \"updated_at\": \"2025-11-26T10:00:00.000Z\",\n      \"deleted_at\": null\n    }\n  },\n  \"message\": \"Product with id: 1 fetched successfully\",\n  \"success\": true\n}"
+            },
+            {
+              "name": "Product Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/999",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "999"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"Product not found\",\n  \"success\": false\n}"
+            }
+          ]
         },
         {
           "name": "Create Product",
@@ -66,20 +295,56 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium Laptop\",\n  \"description\": \"High-performance laptop for professional use\",\n  \"price\": 1299.99,\n  \"category\": \"Electronics\",\n  \"stock\": 50,\n  \"sku\": \"LAP-001\",\n  \"brand\": \"TechBrand\",\n  \"specifications\": {\n    \"processor\": \"Intel i7\",\n    \"ram\": \"16GB\",\n    \"storage\": \"512GB SSD\"\n  },\n  \"images\": [\n    \"https://example.com/images/laptop1.jpg\",\n    \"https://example.com/images/laptop2.jpg\"\n  ]\n}"
+              "raw": "{\n  \"sku\": \"PROD-001\",\n  \"name\": \"Premium Laptop\",\n  \"description\": \"High-performance laptop for professional use\",\n  \"price\": 1299.99,\n  \"currency\": \"NPR\",\n  \"stock\": 50,\n  \"is_active\": true,\n  \"image_url\": \"https://example.com/images/laptop.jpg\",\n  \"image_alt\": \"Premium Laptop Image\",\n  \"metadata\": {\n    \"processor\": \"Intel i7\",\n    \"ram\": \"16GB\",\n    \"storage\": \"512GB SSD\"\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/products/create",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "products", "create"]
             },
-            "description": "Create a new product in the database"
+            "description": "Create a new product. Requires authentication."
           },
-          "response": []
+          "response": [
+            {
+              "name": "Product Created Response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/create",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "create"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 201,\n  \"data\": {\n    \"id\": 1,\n    \"sku\": \"PROD-001\",\n    \"name\": \"Premium Laptop\",\n    \"description\": \"High-performance laptop for professional use\",\n    \"price\": \"1299.99\",\n    \"currency\": \"NPR\",\n    \"stock\": 50,\n    \"is_active\": true,\n    \"merchant_id\": 1,\n    \"created_by\": 1,\n    \"created_at\": \"2025-11-26T10:00:00.000Z\",\n    \"updated_at\": \"2025-11-26T10:00:00.000Z\"\n  },\n  \"message\": \"Product Created Successfully\",\n  \"success\": true\n}"
+            },
+            {
+              "name": "Validation Error",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/create",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "create"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    {\n      \"path\": \"sku\",\n      \"message\": \"Required\"\n    },\n    {\n      \"path\": \"name\",\n      \"message\": \"Required\"\n    }\n  ],\n  \"success\": false\n}"
+            }
+          ]
         },
         {
           "name": "Update Product",
@@ -89,11 +354,16 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium Laptop - Updated\",\n  \"description\": \"High-performance laptop with latest features\",\n  \"price\": 1199.99,\n  \"category\": \"Electronics\",\n  \"stock\": 45,\n  \"brand\": \"TechBrand\",\n  \"specifications\": {\n    \"processor\": \"Intel i7 Gen 13\",\n    \"ram\": \"32GB\",\n    \"storage\": \"1TB SSD\"\n  }\n}"
+              "raw": "{\n  \"name\": \"Premium Laptop - Updated\",\n  \"description\": \"High-performance laptop with latest features\",\n  \"price\": 1199.99,\n  \"stock\": 45,\n  \"is_active\": true,\n  \"metadata\": {\n    \"processor\": \"Intel i7 Gen 13\",\n    \"ram\": \"32GB\",\n    \"storage\": \"1TB SSD\"\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/products/update/:id",
@@ -102,20 +372,42 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "123",
+                  "value": "1",
                   "description": "Product ID to update"
                 }
               ]
             },
-            "description": "Update an existing product by its ID"
+            "description": "Update an existing product by its ID. Requires authentication and ownership/permissions."
           },
-          "response": []
+          "response": [
+            {
+              "name": "Product Updated Response",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/update/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "update", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"updateData\": {\n      \"id\": 1,\n      \"sku\": \"PROD-001\",\n      \"name\": \"Premium Laptop - Updated\",\n      \"description\": \"High-performance laptop with latest features\",\n      \"price\": \"1199.99\",\n      \"stock\": 45,\n      \"updated_at\": \"2025-11-26T11:00:00.000Z\"\n    }\n  },\n  \"message\": \"Product Updated Successfully\",\n  \"success\": true\n}"
+            }
+          ]
         },
         {
           "name": "Delete Product",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/v1/products/delete/:id",
               "host": ["{{base_url}}"],
@@ -123,23 +415,373 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "123",
+                  "value": "1",
                   "description": "Product ID to delete"
                 }
               ]
             },
-            "description": "Delete a product by its ID"
+            "description": "Soft delete a product by its ID. Requires authentication and ownership/permissions."
+          },
+          "response": [
+            {
+              "name": "Product Deleted Response",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/products/delete/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "products", "delete", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {},\n  \"message\": \"Product Deleted Successfully\",\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Product management endpoints. Most endpoints require authentication."
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders"]
+            },
+            "description": "Retrieve all orders filtered by user role:\n- Customers see only their orders\n- Merchants see orders for their merchant_id\n- Admins see all orders\n\nRequires authentication and orders.read permission."
+          },
+          "response": [
+            {
+              "name": "Orders List Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"order_number\": \"ORD-1732619400000-abc123def\",\n      \"customer_id\": 1,\n      \"merchant_id\": 2,\n      \"status\": \"pending\",\n      \"total_amount\": \"999.99\",\n      \"currency\": \"NPR\",\n      \"shipping_address\": {\n        \"street\": \"123 Main St\",\n        \"city\": \"Kathmandu\",\n        \"country\": \"Nepal\"\n      },\n      \"billing_address\": null,\n      \"created_at\": \"2025-11-26T10:00:00.000Z\",\n      \"updated_at\": \"2025-11-26T10:00:00.000Z\"\n    }\n  ],\n  \"message\": \"Orders Fetched Successfully\",\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Retrieve a specific order by its ID. Ownership is validated.\n\nRequires authentication and orders.read permission."
+          },
+          "response": [
+            {
+              "name": "Order Detail Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"id\": 1,\n    \"order_number\": \"ORD-1732619400000-abc123def\",\n    \"customer_id\": 1,\n    \"merchant_id\": 2,\n    \"status\": \"pending\",\n    \"total_amount\": \"999.99\",\n    \"currency\": \"NPR\",\n    \"shipping_address\": {\n      \"street\": \"123 Main St\",\n      \"city\": \"Kathmandu\",\n      \"country\": \"Nepal\"\n    },\n    \"billing_address\": null,\n    \"created_at\": \"2025-11-26T10:00:00.000Z\",\n    \"updated_at\": \"2025-11-26T10:00:00.000Z\"\n  },\n  \"message\": \"Order Fetched Successfully\",\n  \"success\": true\n}"
+            },
+            {
+              "name": "Order Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/999",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "999"]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"Order not found\",\n  \"success\": false\n}"
+            },
+            {
+              "name": "Access Denied",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/5",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "5"]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 403,\n  \"message\": \"Access denied to this order\",\n  \"success\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": 1,\n  \"merchant_id\": 2,\n  \"total_amount\": \"999.99\",\n  \"currency\": \"NPR\",\n  \"shipping_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Kathmandu\",\n    \"state\": \"Bagmati\",\n    \"postal_code\": \"44600\",\n    \"country\": \"Nepal\"\n  },\n  \"billing_address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Kathmandu\",\n    \"state\": \"Bagmati\",\n    \"postal_code\": \"44600\",\n    \"country\": \"Nepal\"\n  },\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2,\n      \"unit_price\": \"499.99\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", "create"]
+            },
+            "description": "Create a new order with items.\n\nRequires authentication and orders.create permission."
+          },
+          "response": [
+            {
+              "name": "Order Created Response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/create",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "create"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 201,\n  \"data\": {\n    \"id\": 1,\n    \"order_number\": \"ORD-1732619400000-abc123def\",\n    \"customer_id\": 1,\n    \"merchant_id\": 2,\n    \"status\": \"pending\",\n    \"total_amount\": \"999.99\",\n    \"currency\": \"NPR\",\n    \"shipping_address\": {\n      \"street\": \"123 Main St\",\n      \"city\": \"Kathmandu\",\n      \"country\": \"Nepal\"\n    },\n    \"created_at\": \"2025-11-26T10:00:00.000Z\",\n    \"updated_at\": \"2025-11-26T10:00:00.000Z\"\n  },\n  \"message\": \"Order Created Successfully\",\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/:id/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Order ID"
+                }
+              ]
+            },
+            "description": "Update the status of an order. Only merchants and admins can update status.\n\nAvailable statuses:\n- pending\n- confirmed\n- processing\n- shipped\n- delivered\n- cancelled\n\nRequires authentication and orders.update permission."
+          },
+          "response": [
+            {
+              "name": "Status Updated Response",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/1/status",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "1", "status"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"id\": 1,\n    \"order_number\": \"ORD-1732619400000-abc123def\",\n    \"status\": \"confirmed\",\n    \"updated_at\": \"2025-11-26T11:00:00.000Z\"\n  },\n  \"message\": \"Order Status Updated\",\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/:id/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Order ID to cancel"
+                }
+              ]
+            },
+            "description": "Cancel an order with strict ownership validation:\n- Customers can ONLY cancel their own orders\n- Merchants can cancel orders they manage\n- Admins can cancel any order\n\nOnly orders with status 'pending' or 'confirmed' can be cancelled.\n\nRequires authentication and orders.cancel permission."
+          },
+          "response": [
+            {
+              "name": "Order Cancelled Response",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/1/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "1", "cancel"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 200,\n  \"data\": {\n    \"id\": 1,\n    \"order_number\": \"ORD-1732619400000-abc123def\",\n    \"status\": \"cancelled\",\n    \"updated_at\": \"2025-11-26T11:00:00.000Z\"\n  },\n  \"message\": \"Order Cancelled Successfully\",\n  \"success\": true\n}"
+            },
+            {
+              "name": "Cannot Cancel - Invalid Status",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/1/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "1", "cancel"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"Cannot cancel order with status: shipped. Only pending or confirmed orders can be cancelled.\",\n  \"success\": false\n}"
+            },
+            {
+              "name": "Cannot Cancel - Not Owner",
+              "originalRequest": {
+                "method": "PUT",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/orders/5/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "orders", "5", "cancel"]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"statusCode\": 403,\n  \"message\": \"You can only cancel your own orders\",\n  \"success\": false\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/orders/:id/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "orders", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Order ID to cancel"
+                }
+              ]
+            },
+            "description": "Alternative PATCH endpoint for order cancellation. Same functionality as PUT /cancel."
           },
           "response": []
         }
-      ]
+      ],
+      "description": "Order management endpoints. All endpoints require authentication."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
     }
   ],
   "variable": [
     {
       "key": "base_url",
       "value": "http://localhost:6767",
-      "type": "string"
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "auth_token",
+      "value": "your_jwt_token_here",
+      "type": "string",
+      "description": "JWT authentication token"
     }
   ]
 }
