@@ -1,0 +1,116 @@
+# ================================
+# Merchant Hub API - Development Docker Compose
+# Optimized for local development
+# ================================
+
+version: "3.9"
+
+services:
+  # ================================
+  # API Application (Development)
+  # ================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: merchant-api-dev
+    restart: unless-stopped
+    ports:
+      - "${PORT:-6767}:6767"
+    environment:
+      - NODE_ENV=development
+      - PORT=6767
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/merchant_hub?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-key-not-for-production
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - merchant-network-dev
+    command: pnpm dev
+
+  # ================================
+  # PostgreSQL Database
+  # ================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: merchant-postgres-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=merchant_hub
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - merchant-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d merchant_hub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ================================
+  # Redis Cache
+  # ================================
+  redis:
+    image: redis:7-alpine
+    container_name: merchant-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - merchant-network-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ================================
+  # Redis Commander (Optional - Redis GUI)
+  # ================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: merchant-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - merchant-network-dev
+    profiles:
+      - tools
+
+# ================================
+# Networks
+# ================================
+networks:
+  merchant-network-dev:
+    driver: bridge
+    name: merchant-network-dev
+
+# ================================
+# Volumes
+# ================================
+volumes:
+  postgres_data_dev:
+    name: merchant-postgres-data-dev
+  redis_data_dev:
+    name: merchant-redis-data-dev
