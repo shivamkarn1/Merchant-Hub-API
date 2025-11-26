@@ -14,14 +14,9 @@ import {
 } from "../../services/products/products.service";
 import { zodToApiError } from "../../utils/handleZodError";
 import { eq, and, like, gte, lte, desc, asc, or } from "drizzle-orm";
-import { cache } from "../../utils/redis";
+import { cache, CACHE_TTL, CACHE_KEYS } from "../../utils/redis";
 import { z } from "zod";
 import crypto from "crypto";
-
-const CACHE_TTL = {
-  ALL_PRODUCTS: 600, // 10 mins
-  SINGLE_PRODUCT: 300,
-};
 
 // query schema ahh query better kara k lagi , Production level things.
 export const getProductQuerySchema = z.object({
@@ -69,8 +64,11 @@ export const getProductQuerySchema = z.object({
 // };
 
 type ProductQueryParams = z.infer<typeof getProductQuerySchema>;
-// now cache key banaba prtaiiiii for ofcourse redissss
-function buildCacheKeyFromQuery(obj: ProductQueryParams) {
+
+/**
+ * Build a deterministic cache key from query parameters
+ */
+function buildCacheKeyFromQuery(obj: ProductQueryParams): string {
   const normalized: Record<string, unknown> = {};
   Object.keys(obj)
     .sort()
@@ -79,10 +77,11 @@ function buildCacheKeyFromQuery(obj: ProductQueryParams) {
       const v = obj[key];
       if (v !== undefined && v !== null && v !== "") normalized[k] = v;
     });
-  return (
-    "products:query:" +
-    crypto.createHash("sha1").update(JSON.stringify(normalized)).digest("hex")
-  );
+  const hash = crypto
+    .createHash("sha1")
+    .update(JSON.stringify(normalized))
+    .digest("hex");
+  return CACHE_KEYS.PRODUCTS.QUERY(hash);
 }
 
 const getAllProductsHandler = asyncHandler(async (req, res) => {
@@ -115,12 +114,15 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
     limit,
     offset,
   });
-  // check in cache
-  const cached = await cache.get(cacheKey);
+
+  // Check cache first
+  const cached = await cache.get<{ products: unknown[]; meta: unknown }>(
+    cacheKey
+  );
   if (cached) {
     return res
       .status(OK)
-      .json(new ApiResponse(Status.OK, cached, "Products served from Cache"));
+      .json(new ApiResponse(Status.OK, cached, "Products served from cache"));
   }
 
   // Building "where" clause beigns here
@@ -178,18 +180,22 @@ const getAllProductsHandler = asyncHandler(async (req, res) => {
     products,
     meta: { limit, offset, count: products.length },
   };
-  await cache.set(cacheKey, response, 120); // cache 2min
+
+  // Cache for configured TTL
+  await cache.set(cacheKey, response, CACHE_TTL.PRODUCTS_LIST);
 
   // finally success response send
   return res
     .status(OK)
-    .json(new ApiResponse(Status.OK, response, "Product(s) Fetched"));
+    .json(
+      new ApiResponse(Status.OK, response, "Products fetched successfully")
+    );
 });
 
 const createProductHandler = asyncHandler(async (req, res) => {
   // sabsa pahila ta input validation
   if (!req.user) {
-    throw new ApiError(Status.Unauthorized, "Aunthentication Required");
+    throw new ApiError(Status.Unauthorized, "Authentication Required");
   }
   const parseResult = await createProductSchema.safeParseAsync(req.body);
   // check kara prlai ki success velai ki nai parsing
@@ -197,12 +203,11 @@ const createProductHandler = asyncHandler(async (req, res) => {
     throw zodToApiError(parseResult.error);
   }
 
-  console.log("The data to be sent for creation is : ", parseResult.data);
   // okr baad service call kara partai nai
   const createdProduct = await createProduct(parseResult.data, req.user);
 
-  // invalidate all products cache after the product has been created
-  await cache.del("products:all");
+  // Invalidate all products cache after the product has been created
+  await cache.invalidateProductCache();
 
   // and last me return success response
   return res
@@ -232,6 +237,10 @@ const updateProductHandler = asyncHandler(async (req, res) => {
     throw zodToApiError(parseResult.error);
   }
   const updateData = await updateProduct(id, parseResult.data, req.user);
+
+  // Invalidate product cache after update
+  await cache.invalidateProductCache(id);
+
   return res
     .status(OK)
     .json(
@@ -246,10 +255,14 @@ const deleteProductHandler = asyncHandler(async (req, res) => {
   const id = parseInt(req.params.id);
 
   if (isNaN(id)) {
-    throw new ApiError(Status.BadRequest, " Invaild product ID");
+    throw new ApiError(Status.BadRequest, "Invalid product ID");
   }
 
   await deleteProduct(id, req.user);
+
+  // Invalidate product cache after deletion
+  await cache.invalidateProductCache(id);
+
   return res
     .status(OK)
     .json(new ApiResponse(Status.OK, {}, "Product Deleted Successfully"));
@@ -263,7 +276,27 @@ const getProductByIdHandler = asyncHandler(async (req, res) => {
   if (isNaN(id)) {
     throw new ApiError(Status.BadRequest, "Invalid product ID");
   }
+
+  // Try to get from cache first
+  const cacheKey = CACHE_KEYS.PRODUCTS.SINGLE(id);
+  const cachedProduct = await cache.get(cacheKey);
+
+  if (cachedProduct) {
+    return res
+      .status(OK)
+      .json(
+        new ApiResponse(
+          Status.OK,
+          { product: cachedProduct },
+          `Product served from cache`
+        )
+      );
+  }
+
   const product = await getProductById(id, req.user);
+
+  // Cache the product
+  await cache.set(cacheKey, product, CACHE_TTL.PRODUCT_DETAIL);
 
   return res
     .status(OK)
@@ -271,7 +304,7 @@ const getProductByIdHandler = asyncHandler(async (req, res) => {
       new ApiResponse(
         Status.OK,
         { product },
-        `The product with id : ${id} served`
+        `Product with id: ${id} fetched successfully`
       )
     );
 });
