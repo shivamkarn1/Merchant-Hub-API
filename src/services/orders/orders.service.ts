@@ -179,7 +179,7 @@ export async function cancelOrder(id: number, user: AuthUser) {
 }
 
 /**
- * Helper function to get order owner info (for middleware)
+  Helper function to get order owner info (for middleware)
  */
 export async function getOrderOwnerInfo(orderId: number): Promise<{
   ownerId: number;
