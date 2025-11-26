@@ -12,6 +12,7 @@ import {
   check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { usersTable } from "./users.schema";
 
 export const productsTable = pgTable(
   "products",
@@ -35,6 +36,14 @@ export const productsTable = pgTable(
     image_alt: varchar("image_alt", { length: 255 }),
 
     metadata: json("metadata"),
+
+    //  owner tracking for data isolation
+    created_by: bigint("created_by", { mode: "number" })
+      .notNull()
+      .references(() => usersTable.id),
+    merchant_id: bigint("merchant_id", { mode: "number" })
+      .notNull()
+      .references(() => usersTable.id),
 
     created_at: timestamp("created_at").defaultNow().notNull(),
     updated_at: timestamp("updated_at").defaultNow().notNull(),

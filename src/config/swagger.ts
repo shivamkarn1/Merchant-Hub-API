@@ -282,7 +282,14 @@ API endpoints are rate-limited to ensure fair usage and service stability.
           },
           status: {
             type: "string",
-            enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+            enum: [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled",
+            ],
             description: "Order status",
           },
           total_amount: {
@@ -373,7 +380,14 @@ API endpoints are rate-limited to ensure fair usage and service stability.
         properties: {
           status: {
             type: "string",
-            enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+            enum: [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled",
+            ],
             description: "New order status",
           },
         },
@@ -472,10 +486,7 @@ API endpoints are rate-limited to ensure fair usage and service stability.
 
 const swaggerOptions: swaggerJsdoc.Options = {
   definition: swaggerDefinition,
-  apis: [
-    "./src/routes/**/*.ts",
-    "./src/controllers/**/*.ts",
-  ],
+  apis: ["./src/routes/**/*.ts", "./src/controllers/**/*.ts"],
 };
 
 export const swaggerSpec = swaggerJsdoc(swaggerOptions);
