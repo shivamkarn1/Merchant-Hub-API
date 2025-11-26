@@ -1,14 +1,10 @@
-# ================================
 # Merchant Hub API - Development Docker Compose
 # Optimized for local development
-# ================================
 
 version: "3.9"
 
 services:
-  # ================================
   # API Application (Development)
-  # ================================
   api:
     build:
       context: .
@@ -35,9 +31,7 @@ services:
       - merchant-network-dev
     command: pnpm dev
 
-  # ================================
   # PostgreSQL Database
-  # ================================
   postgres:
     image: postgres:16-alpine
     container_name: merchant-postgres-dev
@@ -59,9 +53,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # ================================
   # Redis Cache
-  # ================================
   redis:
     image: redis:7-alpine
     container_name: merchant-redis-dev
@@ -80,9 +72,7 @@ services:
       retries: 5
       start_period: 5s
 
-  # ================================
   # Redis Commander (Optional - Redis GUI)
-  # ================================
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: merchant-redis-commander
@@ -98,17 +88,13 @@ services:
     profiles:
       - tools
 
-# ================================
 # Networks
-# ================================
 networks:
   merchant-network-dev:
     driver: bridge
     name: merchant-network-dev
 
-# ================================
 # Volumes
-# ================================
 volumes:
   postgres_data_dev:
     name: merchant-postgres-data-dev
