@@ -59,6 +59,22 @@ API endpoints are rate-limited to ensure fair usage and service stability.
   ],
   tags: [
     {
+      name: "Authentication",
+      description: "User authentication endpoints (login, register, token refresh)",
+    },
+    {
+      name: "Profile",
+      description: "User profile management",
+    },
+    {
+      name: "User Management",
+      description: "Admin endpoints for managing users",
+    },
+    {
+      name: "Permission Management",
+      description: "Admin endpoints for managing user permissions",
+    },
+    {
       name: "Products",
       description: "Product management endpoints",
     },
@@ -141,6 +157,123 @@ API endpoints are rate-limited to ensure fair usage and service stability.
           count: {
             type: "integer",
             description: "Number of items returned",
+          },
+        },
+      },
+
+      // User schemas
+      User: {
+        type: "object",
+        properties: {
+          id: {
+            type: "integer",
+            description: "User ID",
+          },
+          email: {
+            type: "string",
+            format: "email",
+            description: "User email",
+          },
+          name: {
+            type: "string",
+            description: "User full name",
+          },
+          role: {
+            type: "string",
+            enum: ["super_admin", "admin", "merchant", "customer", "viewer"],
+            description: "User role",
+          },
+          merchant_id: {
+            type: "integer",
+            nullable: true,
+            description: "Associated merchant ID",
+          },
+          parent_user_id: {
+            type: "integer",
+            nullable: true,
+            description: "Parent user for hierarchical access",
+          },
+          is_active: {
+            type: "boolean",
+            description: "Whether user account is active",
+          },
+          is_verified: {
+            type: "boolean",
+            description: "Whether email is verified",
+          },
+          last_login: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+            description: "Last login timestamp",
+          },
+          created_at: {
+            type: "string",
+            format: "date-time",
+            description: "Account creation timestamp",
+          },
+          updated_at: {
+            type: "string",
+            format: "date-time",
+            description: "Last update timestamp",
+          },
+          permissions: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "User permissions list",
+          },
+        },
+      },
+      RegisterInput: {
+        type: "object",
+        required: ["email", "password", "name"],
+        properties: {
+          email: {
+            type: "string",
+            format: "email",
+          },
+          password: {
+            type: "string",
+            minLength: 8,
+            description: "Must contain uppercase, lowercase, and number",
+          },
+          name: {
+            type: "string",
+            minLength: 2,
+            maxLength: 255,
+          },
+        },
+      },
+      LoginInput: {
+        type: "object",
+        required: ["email", "password"],
+        properties: {
+          email: {
+            type: "string",
+            format: "email",
+          },
+          password: {
+            type: "string",
+          },
+        },
+      },
+      AuthTokens: {
+        type: "object",
+        properties: {
+          accessToken: {
+            type: "string",
+            description: "JWT access token",
+          },
+          refreshToken: {
+            type: "string",
+            description: "JWT refresh token",
+          },
+          expiresIn: {
+            type: "string",
+            example: "7d",
+            description: "Token expiry duration",
           },
         },
       },
