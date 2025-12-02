@@ -1,7 +1,7 @@
 /**
  * Database Seed Script
  * Run with: pnpm seed
- * 
+ *
  * This script creates:
  * 1. A super admin user
  * 2. A merchant user
@@ -44,7 +44,9 @@ async function seed() {
       .returning();
 
     if (superAdmin) {
-      console.log(`  ✅ Super Admin created: ${superAdmin.email} (ID: ${superAdmin.id})`);
+      console.log(
+        `  ✅ Super Admin created: ${superAdmin.email} (ID: ${superAdmin.id})`
+      );
     } else {
       console.log("  ⚠️ Super Admin already exists");
       const [existingSuperAdmin] = await db
@@ -99,7 +101,9 @@ async function seed() {
         .update(usersTable)
         .set({ merchant_id: merchant1.id })
         .where(eq(usersTable.id, merchant1.id));
-      console.log(`  ✅ Merchant created: ${merchant1.email} (ID: ${merchant1.id})`);
+      console.log(
+        `  ✅ Merchant created: ${merchant1.email} (ID: ${merchant1.id})`
+      );
     } else {
       console.log("  ⚠️ Merchant already exists");
       const [existing] = await db
@@ -127,7 +131,9 @@ async function seed() {
     let customerId: number;
     if (customer) {
       customerId = customer.id;
-      console.log(`  ✅ Customer created: ${customer.email} (ID: ${customer.id})`);
+      console.log(
+        `  ✅ Customer created: ${customer.email} (ID: ${customer.id})`
+      );
     } else {
       console.log("  ⚠️ Customer already exists");
       const [existing] = await db
@@ -167,7 +173,8 @@ async function seed() {
       {
         sku: "TECH-001",
         name: "Wireless Bluetooth Headphones",
-        description: "Premium noise-cancelling wireless headphones with 30-hour battery life",
+        description:
+          "Premium noise-cancelling wireless headphones with 30-hour battery life",
         price: "149.99",
         compare_at_price: "199.99",
         cost_price: "75.00",
@@ -259,7 +266,9 @@ async function seed() {
         .returning();
 
       if (created) {
-        console.log(`  ✅ Product created: ${created.name} (SKU: ${created.sku})`);
+        console.log(
+          `  ✅ Product created: ${created.name} (SKU: ${created.sku})`
+        );
       } else {
         console.log(`  ⚠️ Product ${product.sku} already exists`);
       }
@@ -338,20 +347,37 @@ async function seed() {
     console.log("🎉 Seed completed successfully!");
     console.log("=".repeat(60));
     console.log("\n📋 Test Credentials:\n");
-    console.log("┌─────────────────────────────────────────────────────────────┐");
-    console.log("│ Role         │ Email                        │ Password      │");
-    console.log("├─────────────────────────────────────────────────────────────┤");
-    console.log("│ Super Admin  │ superadmin@merchant-hub.com  │ SuperAdmin@123│");
-    console.log("│ Admin        │ admin@merchant-hub.com       │ Admin@123     │");
-    console.log("│ Merchant     │ merchant1@merchant-hub.com   │ Merchant@123  │");
-    console.log("│ Customer     │ customer@merchant-hub.com    │ Customer@123  │");
-    console.log("│ Viewer       │ viewer@merchant-hub.com      │ Viewer@123    │");
-    console.log("└─────────────────────────────────────────────────────────────┘");
+    console.log(
+      "┌─────────────────────────────────────────────────────────────┐"
+    );
+    console.log(
+      "│ Role         │ Email                        │ Password      │"
+    );
+    console.log(
+      "├─────────────────────────────────────────────────────────────┤"
+    );
+    console.log(
+      "│ Super Admin  │ superadmin@merchant-hub.com  │ SuperAdmin@123│"
+    );
+    console.log(
+      "│ Admin        │ admin@merchant-hub.com       │ Admin@123     │"
+    );
+    console.log(
+      "│ Merchant     │ merchant1@merchant-hub.com   │ Merchant@123  │"
+    );
+    console.log(
+      "│ Customer     │ customer@merchant-hub.com    │ Customer@123  │"
+    );
+    console.log(
+      "│ Viewer       │ viewer@merchant-hub.com      │ Viewer@123    │"
+    );
+    console.log(
+      "└─────────────────────────────────────────────────────────────┘"
+    );
     console.log("\n🚀 You can now test the API with these credentials!");
     console.log("   1. Login: POST /api/v1/auth/login");
     console.log("   2. Use the accessToken in Authorization header");
     console.log("   3. Browse API docs at: http://localhost:6767/api-docs\n");
-
   } catch (error) {
     console.error("❌ Seed failed:", error);
     throw error;
