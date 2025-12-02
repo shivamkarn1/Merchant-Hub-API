@@ -33,6 +33,10 @@ app.get("/api-docs.json", (req: Request, res: Response) => {
   res.send(swaggerSpec);
 });
 
+// auth routes
+import authRouter from "./routes/auth/auth.routes";
+app.use("/api/v1/auth", authRouter);
+
 // products routes
 import productRouter from "./routes/products/products.routes";
 app.use("/api/v1/products", productRouter);
